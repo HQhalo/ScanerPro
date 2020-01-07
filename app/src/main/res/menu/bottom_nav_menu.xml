@@ -2,21 +2,21 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_recents"
+        android:id="@+id/action_gallery"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:title="Gallery"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_camera"
         android:enabled="true"
         android:icon="@android:drawable/ic_menu_camera"
-        android:title="Recents"
+        android:title="Camera"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/action_favorites"
+        android:id="@+id/action_accept"
         android:enabled="true"
-        android:icon="@android:drawable/ic_menu_slideshow"
-        android:title="Favorites"
-        app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/action_nearby"
-        android:enabled="true"
-        android:icon="@android:drawable/ic_menu_rotate"
-        android:title="Nearby"
+        android:icon="@android:drawable/ic_popup_sync"
+        android:title="Ok"
         app:showAsAction="ifRoom" />
 </menu>
