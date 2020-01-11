@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        imageView = findViewById(R.id.image_view);
+        imageView = findViewById(R.id.imageView);
         BottomNavigationView bottomNavigationView = (BottomNavigationView) findViewById(R.id.bottom_navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -42,9 +42,7 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.action_accept:
                         Intent cropIntent = new Intent(MainActivity.this, CropActivity.class);
 
-                        ByteArrayOutputStream bs = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, bs);
-                        cropIntent.putExtra("byteArray", bs.toByteArray());
+                        Image.selectedImageBitmap = bitmap;
                         startActivity(cropIntent);
                         break;
                     case R.id.action_camera:
