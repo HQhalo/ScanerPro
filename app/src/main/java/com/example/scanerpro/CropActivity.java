@@ -40,6 +40,7 @@ public class CropActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crop);
+        this.getSupportActionBar().hide();
 
         initializeElement();
 
