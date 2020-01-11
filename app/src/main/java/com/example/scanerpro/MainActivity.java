@@ -40,10 +40,15 @@ public class MainActivity extends AppCompatActivity {
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.action_accept:
-                        Intent cropIntent = new Intent(MainActivity.this, CropActivity.class);
+                        if(bitmap != null) {
+                            Intent cropIntent = new Intent(MainActivity.this, CropActivity.class);
 
-                        Image.selectedImageBitmap = bitmap;
-                        startActivity(cropIntent);
+                            Image.selectedImageBitmap = bitmap;
+                            startActivity(cropIntent);
+                        }
+                        else {
+                            Toast.makeText(MainActivity.this, "You haven't picked Image",Toast.LENGTH_LONG).show();
+                        }
                         break;
                     case R.id.action_camera:
                         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
