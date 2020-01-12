@@ -10,7 +10,7 @@
 
         />
     <item
-        android:id="@+id/action_space"
+        android:id="@+id/action_totext"
         android:enabled="true"
         android:title="Text"
         android:icon="@android:drawable/ic_menu_upload"

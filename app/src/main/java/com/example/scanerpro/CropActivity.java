@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -35,6 +37,11 @@ import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,7 +57,7 @@ public class CropActivity extends AppCompatActivity {
     NativeClass nativeClass;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crop);
@@ -79,9 +86,24 @@ public class CropActivity extends AppCompatActivity {
                         polygonView.setVisibility(View.INVISIBLE);
 
                         break;
-                    case R.id.action_space:
-                        pickImage();
+                    case R.id.action_totext:
 
+                        String filePath = saveToInternalStorage(selectedImageBitmap);
+                        ImageUploader imageUploader = new ImageUploader();
+
+                        Log.d("quang",filePath);
+                        imageUploader.setImageUploadCallback(new ImageUploader.ImageUploadCallback() {
+                            @Override
+                            public void onImageUploaded(String text) {
+                                Toast.makeText(CropActivity.this,"text: "+text,Toast.LENGTH_LONG).show();
+                            }
+
+                            @Override
+                            public void onImageUploadFailed() {
+
+                            }
+                        });
+                        imageUploader.uploadImage(filePath,"something");
 
                         break;
                 }
@@ -126,47 +148,30 @@ public class CropActivity extends AppCompatActivity {
 
     }
 
-    public void pickImage() {
+    private String saveToInternalStorage(Bitmap bitmapImage){
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        // path to /data/data/yourapp/app_data/imageDir
+        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+        // Create imageDir
+        File mypath=new File(directory, Calendar.getInstance().getTime().toString());
+
+        FileOutputStream fos = null;
         try {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_IMAGE_SELECTOR);
-            } else {
-                Intent i = new Intent(Intent.ACTION_PICK,
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(i, PICK_IMAGE_REQUEST);
+            fos = new FileOutputStream(mypath);
+            // Use the compress method on the BitMap object to write image to the OutputStream
+            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        return mypath.getAbsolutePath();
     }
 
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null &&
-                data.getData() != null) {
-
-            Uri uri = data.getData();
-            String filePath = FilePathUtils.getPath(this, uri);
-            ImageUploader imageUploader = new ImageUploader();
-
-            Log.d("quang",filePath);
-            imageUploader.setImageUploadCallback(new ImageUploader.ImageUploadCallback() {
-                @Override
-                public void onImageUploaded(String text) {
-                    Toast.makeText(CropActivity.this,"text: "+text,Toast.LENGTH_LONG).show();
-                }
-
-                @Override
-                public void onImageUploadFailed() {
-
-                }
-            });
-            imageUploader.uploadImage(filePath,"something");
-        }
-    }
     protected Bitmap getCroppedImage() {
 
         Map<Integer, PointF> points = polygonView.getPoints();
