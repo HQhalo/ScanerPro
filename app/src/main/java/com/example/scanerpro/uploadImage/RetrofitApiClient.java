@@ -37,7 +37,7 @@ public class RetrofitApiClient {
      .build();
 
     retrofit = new Retrofit.Builder()
-     .baseUrl("http://10.0.2.2:3000")
+     .baseUrl("https://scanner-pro-ocr.herokuapp.com")
      .addConverterFactory(GsonConverterFactory.create())
      .client(client)
      .build();
