@@ -2,15 +2,20 @@ package com.example.scanerpro;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -18,16 +23,25 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.example.scanerpro.libraries.NativeClass;
 import com.example.scanerpro.libraries.PolygonView;
+import com.example.scanerpro.uitilities.FilePathUtils;
+import com.example.scanerpro.uploadImage.ImageUploader;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class CropActivity extends AppCompatActivity {
 
+    private static final int PICK_IMAGE_REQUEST = 123;
+    private static final int REQUEST_IMAGE_SELECTOR = 124;
     private ImageView imageView;
 
     FrameLayout holderImageCrop;
@@ -50,11 +64,24 @@ public class CropActivity extends AppCompatActivity {
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.action_process:
+                        Bitmap bitmap = selectedImageBitmap;
+                        Mat imageMat = new Mat();
+                        Utils.bitmapToMat(bitmap, imageMat);
+                        Imgproc.cvtColor(imageMat, imageMat, Imgproc.COLOR_BGR2GRAY);
+                        Imgproc.threshold(imageMat, imageMat, 0, 200,Imgproc.THRESH_OTSU);
+                        Utils.matToBitmap(imageMat, bitmap);
 
+                        imageView.setImageBitmap(bitmap);
                         break;
                     case R.id.action_crop:
-                        imageView.setImageBitmap(getCroppedImage());
+                        selectedImageBitmap = getCroppedImage();
+                        imageView.setImageBitmap(selectedImageBitmap);
                         polygonView.setVisibility(View.INVISIBLE);
+
+                        break;
+                    case R.id.action_space:
+                        pickImage();
+
 
                         break;
                 }
@@ -98,6 +125,48 @@ public class CropActivity extends AppCompatActivity {
         polygonView.setLayoutParams(layoutParams);
 
     }
+
+    public void pickImage() {
+        try {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_IMAGE_SELECTOR);
+            } else {
+                Intent i = new Intent(Intent.ACTION_PICK,
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(i, PICK_IMAGE_REQUEST);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null &&
+                data.getData() != null) {
+
+            Uri uri = data.getData();
+            String filePath = FilePathUtils.getPath(this, uri);
+            ImageUploader imageUploader = new ImageUploader();
+
+            Log.d("quang",filePath);
+            imageUploader.setImageUploadCallback(new ImageUploader.ImageUploadCallback() {
+                @Override
+                public void onImageUploaded(String text) {
+                    Toast.makeText(CropActivity.this,"text: "+text,Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void onImageUploadFailed() {
+
+                }
+            });
+            imageUploader.uploadImage(filePath,"something");
+        }
+    }
     protected Bitmap getCroppedImage() {
 
         Map<Integer, PointF> points = polygonView.getPoints();
@@ -134,6 +203,7 @@ public class CropActivity extends AppCompatActivity {
         outlinePoints.put(3, new PointF(tempBitmap.getWidth(), tempBitmap.getHeight()));
         return outlinePoints;
     }
+
 }
 
 
