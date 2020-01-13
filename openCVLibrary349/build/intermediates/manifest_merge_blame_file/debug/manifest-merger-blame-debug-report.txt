@@ -5,8 +5,8 @@
 5    android:versionName="3.4.9" > <!-- <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="21" /> -->
 6    <uses-sdk
 7        android:minSdkVersion="23"
-7-->/Users/hq/Documents/GitHub/ScanerPro/openCVLibrary349/src/main/AndroidManifest.xml
+7-->C:\Users\MSI GAMING\Documents\GitHub\ScanerPro\openCVLibrary349\src\main\AndroidManifest.xml
 8        android:targetSdkVersion="29" />
-8-->/Users/hq/Documents/GitHub/ScanerPro/openCVLibrary349/src/main/AndroidManifest.xml
+8-->C:\Users\MSI GAMING\Documents\GitHub\ScanerPro\openCVLibrary349\src\main\AndroidManifest.xml
 9
 10</manifest>
