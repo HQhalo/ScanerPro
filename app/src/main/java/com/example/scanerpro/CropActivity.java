@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
@@ -50,7 +51,7 @@ public class CropActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 123;
     private static final int REQUEST_IMAGE_SELECTOR = 124;
     private ImageView imageView;
-
+    ProgressDialog nDialog;
     FrameLayout holderImageCrop;
     PolygonView polygonView;
     Bitmap selectedImageBitmap;
@@ -78,7 +79,7 @@ public class CropActivity extends AppCompatActivity {
                         Imgproc.threshold(imageMat, imageMat, 0, 200,Imgproc.THRESH_OTSU);
                         Utils.matToBitmap(imageMat, bitmap);
 
-                        imageView.setImageBitmap(bitmap);
+                        imageView.setImageBitmap(scaledBitmap(bitmap, holderImageCrop.getWidth(), holderImageCrop.getHeight()));
                         break;
                     case R.id.action_crop:
                         selectedImageBitmap = getCroppedImage();
@@ -95,15 +96,24 @@ public class CropActivity extends AppCompatActivity {
                         imageUploader.setImageUploadCallback(new ImageUploader.ImageUploadCallback() {
                             @Override
                             public void onImageUploaded(String text) {
-                                Toast.makeText(CropActivity.this,"text: "+text,Toast.LENGTH_LONG).show();
+                                nDialog.dismiss();
+                                Intent intent = new Intent(CropActivity.this,ExportActivity.class);
+
+                                intent.putExtra("text",text);
+                                startActivity(intent);
+
                             }
 
                             @Override
                             public void onImageUploadFailed() {
+                                nDialog.dismiss();
 
                             }
                         });
+
+                        nDialog.show();
                         imageUploader.uploadImage(filePath,"something");
+
 
                         break;
                 }
@@ -117,6 +127,11 @@ public class CropActivity extends AppCompatActivity {
         holderImageCrop = findViewById(R.id.holderImageCrop);
         imageView = findViewById(R.id.imageViewCrop);
         polygonView = findViewById(R.id.polygonView);
+        nDialog = new ProgressDialog(CropActivity.this);
+        nDialog.setMessage("Uploading..");
+        nDialog.setTitle("Convert To Text");
+        nDialog.setIndeterminate(false);
+        nDialog.setCancelable(true);
 
         holderImageCrop.post(new Runnable() {
             @Override

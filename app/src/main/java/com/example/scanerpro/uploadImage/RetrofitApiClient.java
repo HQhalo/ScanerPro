@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -34,6 +35,9 @@ public class RetrofitApiClient {
        }
      })
      .addInterceptor(logging)
+            .connectTimeout(1, TimeUnit.MINUTES)
+            .readTimeout(30,TimeUnit.SECONDS)
+            .writeTimeout(30,TimeUnit.SECONDS)
      .build();
 
     retrofit = new Retrofit.Builder()
