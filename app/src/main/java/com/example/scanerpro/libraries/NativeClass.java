@@ -31,6 +31,8 @@ public class NativeClass {
     private static final double AREA_UPPER_THRESHOLD = 0.98;
     private static final double DOWNSCALE_IMAGE_SIZE = 600f;
 
+    public static Exception EXCEPTION_NOT_FOUND_REC;
+
     public Bitmap getScannedBitmap(Bitmap bitmap, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
         PerspectiveTransformation perspective = new PerspectiveTransformation();
         MatOfPoint2f rectangle = new MatOfPoint2f();
@@ -48,7 +50,7 @@ public class NativeClass {
     };
 
 
-    public MatOfPoint2f getPoint(Bitmap bitmap) {
+    public MatOfPoint2f getPoint(Bitmap bitmap) throws Exception {
 
         Mat src = ImageUtils.bitmapToMat(bitmap);
 
@@ -60,7 +62,7 @@ public class NativeClass {
 
         List<MatOfPoint2f> rectangles = getPoints(downscaled);
         if (rectangles.size() == 0) {
-            return null;
+            throw EXCEPTION_NOT_FOUND_REC;
         }
         Collections.sort(rectangles, AreaDescendingComparator);
         MatOfPoint2f largestRectangle = rectangles.get(0);

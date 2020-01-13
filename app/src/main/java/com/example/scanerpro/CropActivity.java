@@ -35,14 +35,19 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CropActivity extends AppCompatActivity {
@@ -134,8 +139,14 @@ public class CropActivity extends AppCompatActivity {
         imageView.setImageBitmap(scaledBitmap);
 
         Bitmap tempBitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
-        Map<Integer, PointF> pointFs =  getOutlinePoints(tempBitmap);
-
+        Map<Integer, PointF> pointFs;
+        try {
+            pointFs = getEdgePoints(tempBitmap);
+        }
+        catch (Exception e) {
+            pointFs=getOutlinePoints(tempBitmap);
+            e.printStackTrace();
+        }
         polygonView.setPoints(pointFs);
         polygonView.setVisibility(View.VISIBLE);
 
@@ -200,7 +211,7 @@ public class CropActivity extends AppCompatActivity {
     }
 
     private Map<Integer, PointF> getOutlinePoints(Bitmap tempBitmap) {
-        Log.v("aashari-tag", "getOutlinePoints");
+        Log.v("An", "getOutlinePoints");
         Map<Integer, PointF> outlinePoints = new HashMap<>();
         outlinePoints.put(0, new PointF(0, 0));
         outlinePoints.put(1, new PointF(tempBitmap.getWidth(), 0));
@@ -209,6 +220,36 @@ public class CropActivity extends AppCompatActivity {
         return outlinePoints;
     }
 
+    private Map<Integer, PointF> getEdgePoints(Bitmap tempBitmap) throws Exception {
+        Log.v("An", "getEdgePoints");
+        List<PointF> pointFs = getContourEdgePoints(tempBitmap);
+        Map<Integer, PointF> orderedPoints = orderedValidEdgePoints(tempBitmap, pointFs);
+        return orderedPoints;
+    }
+
+    private List<PointF> getContourEdgePoints(Bitmap tempBitmap) throws Exception {
+        Log.v("An", "getContourEdgePoints");
+
+        MatOfPoint2f point2f = nativeClass.getPoint(tempBitmap);
+        List<Point> points = Arrays.asList(point2f.toArray());
+
+        List<PointF> result = new ArrayList<>();
+        for (int i = 0; i < points.size(); i++) {
+            result.add(new PointF(((float) points.get(i).x), ((float) points.get(i).y)));
+        }
+
+        return result;
+
+    }
+
+    private Map<Integer, PointF> orderedValidEdgePoints(Bitmap tempBitmap, List<PointF> pointFs) {
+        Log.v("An", "orderedValidEdgePoints");
+        Map<Integer, PointF> orderedPoints = polygonView.getOrderedPoints(pointFs);
+        if (!polygonView.isValidShape(orderedPoints)) {
+            orderedPoints = getOutlinePoints(tempBitmap);
+        }
+        return orderedPoints;
+    }
 }
 
 
