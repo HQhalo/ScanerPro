@@ -73,7 +73,7 @@ public class CropActivity extends AppCompatActivity {
                         if (polygonView.isShown()) {
                             AlertDialog.Builder dialog = new AlertDialog.Builder(CropActivity.this);
                             dialog.setCancelable(true);
-                            dialog.setTitle("something wrong!!");
+                            dialog.setTitle("Be careful!!");
                             dialog.setMessage("You don't want to crop your image, do you?");
                             dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                 @Override
