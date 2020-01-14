@@ -116,12 +116,14 @@ public class CropActivity extends AppCompatActivity {
                         Utils.matToBitmap(imageMat, bitmap);
 
                         imageView.setImageBitmap(scaledBitmap(bitmap, holderImageCrop.getWidth(), holderImageCrop.getHeight()));
+                        selectedImageBitmap = bitmap;
                         break;
                     case R.id.action_crop:
                         if (!polygonView.isShown()) break;
 
                         selectedImageBitmap = getCroppedImage();
-                        imageView.setImageBitmap(selectedImageBitmap);
+                        imageView.setImageBitmap(scaledBitmap(selectedImageBitmap, holderImageCrop.getWidth(), holderImageCrop.getHeight()));
+
                         polygonView.setVisibility(View.INVISIBLE);
 
                         break;
@@ -199,10 +201,14 @@ public class CropActivity extends AppCompatActivity {
         Map<Integer, PointF> pointFs;
         try {
             pointFs = getEdgePoints(tempBitmap);
+            Log.d("quang","detected!");
         }
         catch (Exception e) {
             pointFs=getOutlinePoints(tempBitmap);
             e.printStackTrace();
+            Toast.makeText(CropActivity.this,"can not detect edges",Toast.LENGTH_LONG).show();
+            Log.d("quang","can not detect!");
+
         }
         polygonView.setPoints(pointFs);
         polygonView.setVisibility(View.VISIBLE);

@@ -77,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
                         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
                             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
                         }
+
+
                         break;
                     case R.id.action_gallery:
                         try{
@@ -110,11 +112,11 @@ public class MainActivity extends AppCompatActivity {
                 imageView.setImageBitmap(bitmap);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
-                Toast.makeText(MainActivity.this, "Something went wrong", Toast.LENGTH_LONG).show();
+                //Toast.makeText(MainActivity.this, "Something went wrong", Toast.LENGTH_LONG).show();
             }
 
         }else {
-            Toast.makeText(MainActivity.this, "You haven't picked Image",Toast.LENGTH_LONG).show();
+            //Toast.makeText(MainActivity.this, "You haven't picked Image",Toast.LENGTH_LONG).show();
         }
     }
 }
