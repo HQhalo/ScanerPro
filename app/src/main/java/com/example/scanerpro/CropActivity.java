@@ -1,12 +1,15 @@
 package com.example.scanerpro;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -25,6 +28,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.scanerpro.libraries.NativeClass;
@@ -49,6 +53,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 public class CropActivity extends AppCompatActivity {
 
@@ -58,7 +63,7 @@ public class CropActivity extends AppCompatActivity {
 
     FrameLayout holderImageCrop;
     PolygonView polygonView;
-    Bitmap selectedImageBitmap;
+    Bitmap selectedImageBitmap=null;
     NativeClass nativeClass;
 
     @Override
@@ -76,6 +81,33 @@ public class CropActivity extends AppCompatActivity {
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.action_process:
+                        if (polygonView.isShown()) {
+                            AlertDialog.Builder dialog = new AlertDialog.Builder(CropActivity.this);
+                            dialog.setCancelable(true);
+                            dialog.setTitle("something wrong!!");
+                            dialog.setMessage("You don't want to crop your image, do you?");
+                            dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Bitmap bitmap = selectedImageBitmap;
+                                    Mat imageMat = new Mat();
+                                    Utils.bitmapToMat(bitmap, imageMat);
+                                    Imgproc.cvtColor(imageMat, imageMat, Imgproc.COLOR_BGR2GRAY);
+                                    Imgproc.threshold(imageMat, imageMat, 0, 200,Imgproc.THRESH_OTSU);
+                                    Utils.matToBitmap(imageMat, bitmap);
+
+                                    imageView.setImageBitmap(bitmap);
+                                }
+                            });
+                            dialog.setNegativeButton("No, I will crop", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                }
+                            });
+                            AlertDialog dialog1 = dialog.create();
+                            dialog1.show();
+                        }
                         Bitmap bitmap = selectedImageBitmap;
                         Mat imageMat = new Mat();
                         Utils.bitmapToMat(bitmap, imageMat);
@@ -86,26 +118,42 @@ public class CropActivity extends AppCompatActivity {
                         imageView.setImageBitmap(bitmap);
                         break;
                     case R.id.action_crop:
+                        if (!polygonView.isShown()) break;
+
                         selectedImageBitmap = getCroppedImage();
                         imageView.setImageBitmap(selectedImageBitmap);
                         polygonView.setVisibility(View.INVISIBLE);
 
                         break;
                     case R.id.action_totext:
+                        final ProgressDialog dialog=new ProgressDialog(CropActivity.this);
+                        dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                        dialog.setMessage("Processing, please wait...");
+                        dialog.setMax(100);
+                        dialog.setCancelable(true);
+                        dialog.show();
 
                         String filePath = saveToInternalStorage(selectedImageBitmap);
-                        ImageUploader imageUploader = new ImageUploader();
+
+                        ImageUploader imageUploader = new ImageUploader(dialog);
 
                         Log.d("quang",filePath);
                         imageUploader.setImageUploadCallback(new ImageUploader.ImageUploadCallback() {
                             @Override
                             public void onImageUploaded(String text) {
                                 Toast.makeText(CropActivity.this,"text: "+text,Toast.LENGTH_LONG).show();
+                                dialog.setProgress(100);
+                                dialog.dismiss();
                             }
 
                             @Override
                             public void onImageUploadFailed() {
-
+                                dialog.dismiss();
+                                AlertDialog.Builder builder=new AlertDialog.Builder(CropActivity.this);
+                                builder.setCancelable(true);
+                                builder.setTitle("something wrong!!");
+                                builder.setMessage("server failed...");
+                                builder.create().show();
                             }
                         });
                         imageUploader.uploadImage(filePath,"something");

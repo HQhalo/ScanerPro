@@ -1,9 +1,11 @@
 package com.example.scanerpro;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -55,7 +57,19 @@ public class MainActivity extends AppCompatActivity {
                             startActivity(cropIntent);
                         }
                         else {
-                            Toast.makeText(MainActivity.this, "You haven't picked Image",Toast.LENGTH_LONG).show();
+                            //Toast.makeText(MainActivity.this, "You haven't picked Image",Toast.LENGTH_LONG).show();
+                            AlertDialog.Builder dialog=new AlertDialog.Builder(MainActivity.this);
+                            dialog.setCancelable(true);
+                            dialog.setTitle("something wrong!!");
+                            dialog.setMessage("You haven't picked Image");
+                            dialog.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                }
+                            });
+                            AlertDialog dialog1= dialog.create();
+                            dialog1.show();
                         }
                         break;
                     case R.id.action_camera:

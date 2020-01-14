@@ -5,5 +5,5 @@ import android.graphics.Bitmap;
 import java.io.Serializable;
 
 public class Image {
-    public static Bitmap selectedImageBitmap;
+    public static Bitmap selectedImageBitmap=null;
 }
