@@ -1,9 +1,10 @@
 package com.example.scanerpro.uploadImage;
 
+import android.app.ProgressDialog;
 import android.util.Log;
 
 
-import org.json.JSONObject;
+import org.xml.sax.Parser;
 
 import java.io.File;
 
@@ -17,8 +18,15 @@ import retrofit2.Response;
 public class ImageUploader {
 
   private ImageUploadCallback imageUploadCallback;
+  ProgressDialog dialog;
+  int progress=12;
 
+  public ImageUploader(ProgressDialog dialog)
+  {
+      this.dialog=dialog;
+  }
   public void uploadImage(String filePath , String serverToken) {
+      dialog.setProgress(progress);
     File file = new File(filePath);
     final RequestBody requestFile = RequestBody.create(MediaType.parse("File/*"), file);
     MultipartBody.Part body = MultipartBody.Part.createFormData("image", file.getName(), requestFile);
@@ -32,11 +40,14 @@ public class ImageUploader {
 
        public void onResponse(Call<FileUploadReponse> call, Response<FileUploadReponse> response) {
            Log.d("quag",response.body().getText());
+           Double x=Math.random()*3+0;
+           progress+= x.intValue();
+           if (progress<90)
+               dialog.setProgress(progress);
            if (response.isSuccessful()) {
 
            if (imageUploadCallback != null) {
-
-             imageUploadCallback.onImageUploaded(response.body().getText());
+               imageUploadCallback.onImageUploaded(response.body().getText());
            }
          } else {
            if (imageUploadCallback != null) {
