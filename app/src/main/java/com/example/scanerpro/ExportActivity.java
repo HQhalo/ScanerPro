@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -17,6 +18,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.itextpdf.text.Document;
@@ -123,19 +125,38 @@ public class ExportActivity extends AppCompatActivity {
     }
 
     public void clickSavePDFBTN(View view) {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1){
-            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
-                    PackageManager.PERMISSION_DENIED){
-                String[] permissions = {"android.permission.WRITE_EXTERNAL_STORAGE"};
-                requestPermissions(permissions, STORAGE_CODE_PDF);
+        AlertDialog.Builder dialog = new AlertDialog.Builder(ExportActivity.this);
+        dialog.setCancelable(true);
+        dialog.setTitle("PDF");
+        dialog.setMessage("Save to internal storage or Upload to Google Driver");
+        dialog.setNegativeButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1){
+                    if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                            PackageManager.PERMISSION_DENIED){
+                        String[] permissions = {"android.permission.WRITE_EXTERNAL_STORAGE"};
+                        requestPermissions(permissions, STORAGE_CODE_PDF);
+                    }
+                    else {
+                        savePdf();
+                    }
+                }
+                else {
+                    savePdf();
+                }
             }
-            else {
-                savePdf();
+        });
+        dialog.setPositiveButton("Upload", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //up file
             }
-        }
-        else {
-            savePdf();
-        }
+        });
+        AlertDialog dialog1 = dialog.create();
+        dialog1.show();
+
+
     }
 
     public void clickSaveTextBtn(View view) {
