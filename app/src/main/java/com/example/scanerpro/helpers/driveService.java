@@ -37,4 +37,24 @@ public class driveService {
             return myFile.getId();
         });
     }
+    public Task<String> createFileText(String filePath){
+        return Tasks.call(mExecutor,()->{
+            File fileMetaData = new File();
+            fileMetaData.setName("MyTextFile");
+
+            java.io.File file = new java.io.File(filePath);
+            FileContent mediaContent = new FileContent("text/plain",file);
+            File myFile = null;
+            try {
+                myFile = mDriveService.files().create(fileMetaData,mediaContent).execute();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+            if (myFile==null){
+                throw new IOException("Null result when requesting file creation");
+            }
+            return myFile.getId();
+        });
+    }
 }

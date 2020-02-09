@@ -52,10 +52,12 @@ import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
 
 public class ExportActivity extends AppCompatActivity {
-    private static final int STORAGE_CODE_TEXT = 1235;
     private static final int SIGN_IN_CODE = 400;
     private static final int STORAGE_CODE_PDF_DRIVE = 1111;
     private static final int STORAGE_CODE_PDF_NO_DRIVE = 1112;
+    private static final int STORAGE_CODE_TEXT_NO_DRIVE = 1113;
+    private static final int STORAGE_CODE_TEXT_DRIVE = 1114;
+
 
     EditText editText;
     Button btSave;
@@ -75,6 +77,7 @@ public class ExportActivity extends AppCompatActivity {
         editText = findViewById(R.id.edText);
 
         editText.setText(text);
+        requestSignin();
 
     }
 
@@ -95,17 +98,29 @@ public class ExportActivity extends AppCompatActivity {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     String mFilePath = savePdf();
                     if (mFilePath == null) return;
-                    requestSignin();
-                    uploadPDFfile(mFilePath);
+                    uploadPDFFileToGGDrive(mFilePath);
                 }
                 else {
                     makeText(this, "Permission denied...!", LENGTH_SHORT).show();
                 }
                 break;
             }
-            case STORAGE_CODE_TEXT:{
+            case STORAGE_CODE_TEXT_DRIVE:{
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    saveText();
+                    String mFilePath = saveText();
+                    if (mFilePath == null) return;
+                    uploadTextFileToGGDrive(mFilePath);
+                }
+                else {
+                    makeText(this, "Permission denied...!", LENGTH_SHORT).show();
+                }
+                break;
+            }
+            case STORAGE_CODE_TEXT_NO_DRIVE:{
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    String mFilePath = saveText();
+                    if (mFilePath!=null)
+                        makeText(ExportActivity.this, mFilePath +".text\nis saved!", LENGTH_SHORT).show();
                 }
                 else {
                     makeText(this, "Permission denied...!", LENGTH_SHORT).show();
@@ -139,7 +154,7 @@ public class ExportActivity extends AppCompatActivity {
             return null;
         }
     }
-    private void saveText(){
+    private String saveText(){
         try {
             String h = DateFormat.format("MM-dd-yyyyy-h-mmssaa", System.currentTimeMillis()).toString();
 
@@ -155,9 +170,11 @@ public class ExportActivity extends AppCompatActivity {
             writer.close();
             String m = "File generated with name " + h + ".txt";
             String mFileName = root + "/" + h + ".txt";
-            Toast.makeText(ExportActivity.this, h + ".txt\nis saved to\n" + mFileName, LENGTH_SHORT).show();
+
+            return mFileName;
         } catch (IOException e) {
             Toast.makeText(ExportActivity.this, e.getMessage(), LENGTH_SHORT).show();
+            return null;
         }
     }
 
@@ -206,8 +223,7 @@ public class ExportActivity extends AppCompatActivity {
                     mFilePath = savePdf();
                 }
                 if (mFilePath == null) return;
-                requestSignin();
-                uploadPDFfile(mFilePath);
+                uploadPDFFileToGGDrive(mFilePath);
             }
         });
         AlertDialog dialog1 = dialog.create();
@@ -263,7 +279,7 @@ public class ExportActivity extends AppCompatActivity {
                     }
                 });
     }
-    public void uploadPDFfile(String filePath) {
+    public void uploadPDFFileToGGDrive(String filePath) {
         ProgressDialog progressDialog = new ProgressDialog(ExportActivity.this);
         progressDialog.setTitle("Uploading to Google Drive");
         Log.d("UPLOAD","Uploading to Google Drive");
@@ -289,19 +305,79 @@ public class ExportActivity extends AppCompatActivity {
     }
 
     public void clickSaveTextBtn(View view) {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1){
-            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
-                    PackageManager.PERMISSION_DENIED){
-                String[] permissions = {"android.permission.WRITE_EXTERNAL_STORAGE"};
-                requestPermissions(permissions, STORAGE_CODE_TEXT);
+        AlertDialog.Builder dialog = new AlertDialog.Builder(ExportActivity.this);
+        dialog.setCancelable(true);
+        dialog.setTitle("Text");
+        dialog.setMessage("Save to internal storage or Upload to Google Driver");
+        dialog.setNegativeButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1){
+                    if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                            PackageManager.PERMISSION_DENIED){
+                        String[] permissions = {"android.permission.WRITE_EXTERNAL_STORAGE"};
+                        requestPermissions(permissions, STORAGE_CODE_TEXT_NO_DRIVE);
+                    }
+                    else {
+                        String mFilePath = saveText();
+                        if (mFilePath!=null)
+                            makeText(ExportActivity.this, mFilePath +".text\nis saved!", LENGTH_SHORT).show();
+                    }
+                }
+                else {
+                    String mFilePath = saveText();
+                    if (mFilePath!=null)
+                        makeText(ExportActivity.this, mFilePath +".text\nis saved!", LENGTH_SHORT).show();
+                }
             }
-            else {
-                saveText();
+        });
+        dialog.setPositiveButton("Upload", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String mFilePath = null;
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1){
+                    if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                            PackageManager.PERMISSION_DENIED){
+                        String[] permissions = {"android.permission.WRITE_EXTERNAL_STORAGE"};
+                        requestPermissions(permissions, STORAGE_CODE_TEXT_DRIVE);
+                    }
+                    else {
+                        mFilePath = saveText();
+                    }
+                }
+                else {
+                    mFilePath = saveText();
+                }
+                if (mFilePath == null) return;
+                uploadTextFileToGGDrive(mFilePath);
             }
-        }
-        else {
-            saveText();
-        }
+        });
+        AlertDialog dialog1 = dialog.create();
+        dialog1.show();
+    }
+
+    private void uploadTextFileToGGDrive(String mFilePath) {
+        ProgressDialog progressDialog = new ProgressDialog(ExportActivity.this);
+        progressDialog.setTitle("Uploading to Google Drive");
+        Log.d("UPLOAD","Uploading to Google Drive");
+        progressDialog.setMessage("Please wait...");
+        progressDialog.show();
+
+        driveServiceHelper.createFileText(mFilePath).addOnSuccessListener(
+                new OnSuccessListener<String>() {
+                    @Override
+                    public void onSuccess(String s) {
+                        progressDialog.dismiss();
+                        Toast.makeText(ExportActivity.this, "Uploaded Successfully",LENGTH_SHORT).show();
+                    }
+                }
+        ).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                progressDialog.dismiss();
+                Toast.makeText(ExportActivity.this,"Check your google drive api key", LENGTH_SHORT).show();
+            }
+        });
     }
 
     public void clickCopyBtn(View view) {
